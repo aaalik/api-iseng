@@ -1,0 +1,16 @@
+version: '3.4'
+services:
+  dev:
+    network_mode: host
+    image: api-iseng
+    ports: 
+      - 8413:8413
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /main
+    volumes:
+      - .:/go/src/github.com/aaalik/api-iseng
+    working_dir: /go/src/github.com/aaalik/api-iseng
+    env_file:
+      - .env
