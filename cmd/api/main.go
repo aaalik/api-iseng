@@ -2,6 +2,10 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	"github.com/aaalik/api-iseng/cmd"
 	"github.com/aaalik/api-iseng/config"
@@ -64,14 +68,25 @@ func main() {
 		logr.Panicln(err)
 	}
 
-	server := http.Server{
+	server := &http.Server{
 		Addr:    cf.Host.Address,
 		Handler: router,
 	}
 
-	// Graceful Stop handle
-	cmd.StopGracefully(logr, sqlRead, sqlWrite)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go cmd.StartServer(&wg, logr, server)
 
-	logr.Infof("API serving at %s", server.Addr)
-	logr.Fatal(server.ListenAndServe())
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
+
+	sig := <-stop
+	logr.Info("Caught signal ", sig, " Stop Gracefully")
+
+	// Graceful Stop handle
+	wg.Add(1)
+	go cmd.StopGracefully(&wg, logr, server, sqlRead, sqlWrite)
+
+	wg.Wait()
+	close(stop)
 }
