@@ -38,7 +38,7 @@ func (srr *SQLReaderRepository) DetailUser(ctx context.Context, id string) (*mod
 	if err != nil {
 		return nil, err
 	}
-	query = sqlx.Rebind(sqlx.DOLLAR, query)
+	query = srr.dbr.Rebind(query)
 
 	err = srr.dbr.QueryRowxContext(ctx, query, args...).StructScan(&user)
 	if err == sql.ErrNoRows {
@@ -59,8 +59,8 @@ func (srr *SQLReaderRepository) ListUser(ctx context.Context, request *model.Req
 		FROM %s
 	`, SQLUserTable)
 
-	whereQuery, args := srr.buildUserFilter(request)
-	orderQuery := srr.buildUserSort(request.Queries)
+	whereQuery, args := srr.buildUserFilterQuery(request)
+	orderQuery := srr.buildSortQuery(request.Queries)
 
 	query := strings.Join([]string{selectQuery, whereQuery, orderQuery}, " ")
 	query = srr.dbr.Rebind(query)
@@ -83,27 +83,27 @@ func (srr *SQLReaderRepository) ListUser(ctx context.Context, request *model.Req
 }
 
 func (srr *SQLReaderRepository) CountUsers(ctx context.Context, request *model.RequestListUser) (int32, error) {
-	invoiceCount := int32(0)
+	count := int32(0)
 	selectQuery := fmt.Sprintf(`
 		SELECT
 		COUNT(u.id)
 		FROM %s AS u 
 	`, SQLUserTable)
 
-	whereQuery, args := srr.buildUserFilter(request)
+	whereQuery, args := srr.buildUserFilterQuery(request)
 
 	query := strings.Join([]string{selectQuery, whereQuery}, " ")
 	query = srr.dbr.Rebind(query)
 
-	err := srr.dbr.QueryRowxContext(ctx, query, args...).Scan(&invoiceCount)
+	err := srr.dbr.QueryRowxContext(ctx, query, args...).Scan(&count)
 	if err != nil {
 		return 0, xerrs.Mask(err, model.ErrorSQLRead)
 	}
 
-	return invoiceCount, nil
+	return count, nil
 }
 
-func (srr *SQLReaderRepository) buildUserFilter(req *model.RequestListUser) (string, []interface{}) {
+func (srr *SQLReaderRepository) buildUserFilterQuery(req *model.RequestListUser) (string, []interface{}) {
 	var whereQuery string
 	var whereQueries []string
 	var whereArgs []interface{}
@@ -142,7 +142,7 @@ func (srr *SQLReaderRepository) buildUserFilter(req *model.RequestListUser) (str
 	return whereQuery, whereArgs
 }
 
-func (srr *SQLReaderRepository) buildUserSort(queries *model.Queries) string {
+func (srr *SQLReaderRepository) buildSortQuery(queries *model.Queries) string {
 	var query string
 	var limit int32
 	var offset int32

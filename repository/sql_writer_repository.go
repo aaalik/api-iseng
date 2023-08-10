@@ -77,7 +77,7 @@ func (swr *SQLWriterRepository) CreateUser(ctx context.Context, tx *sqlx.Tx, use
 	if err != nil {
 		return err
 	}
-	query = sqlx.Rebind(sqlx.DOLLAR, query)
+	query = swr.dbw.Rebind(query)
 
 	_, err = tx.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -111,7 +111,7 @@ func (swr *SQLWriterRepository) UpdateUser(ctx context.Context, tx *sqlx.Tx, use
 	if err != nil {
 		return err
 	}
-	query = sqlx.Rebind(sqlx.DOLLAR, query)
+	query = swr.dbw.Rebind(query)
 
 	_, err = tx.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -137,7 +137,7 @@ func (swr *SQLWriterRepository) DeleteUser(ctx context.Context, tx *sqlx.Tx, use
 	if err != nil {
 		return err
 	}
-	query = sqlx.Rebind(sqlx.DOLLAR, query)
+	query = swr.dbw.Rebind(query)
 
 	_, err = tx.ExecContext(ctx, query, args...)
 	if err != nil {

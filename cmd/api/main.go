@@ -81,12 +81,15 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
 
 	sig := <-stop
-	logr.Info("Caught signal ", sig, " Stop Gracefully")
+	logr.Info("Caught signal ", sig)
 
 	// Graceful Stop handle
 	wg.Add(1)
 	go cmd.StopGracefully(&wg, logr, server, sqlRead, sqlWrite)
 
 	wg.Wait()
+
 	close(stop)
+	logr.Info("Stopped Gracefully")
+	os.Exit(0)
 }

@@ -28,12 +28,12 @@ func NewUserUsecase(
 }
 
 func (uu *UserUsecase) DetailUser(ctx context.Context, userID string) (*model.User, error) {
-	invoice, err := uu.srr.DetailUser(ctx, userID)
-	return invoice, err
+	user, err := uu.srr.DetailUser(ctx, userID)
+	return user, err
 }
 
 func (uu *UserUsecase) ListUser(ctx context.Context, request *model.RequestListUser) ([]*model.User, int32, error) {
-	invoices, err := uu.srr.ListUser(ctx, request)
+	users, err := uu.srr.ListUser(ctx, request)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -43,7 +43,7 @@ func (uu *UserUsecase) ListUser(ctx context.Context, request *model.RequestListU
 		return nil, 0, err
 	}
 
-	return invoices, count, nil
+	return users, count, nil
 }
 
 func (uu *UserUsecase) CreateUser(ctx context.Context, request *model.RequestCreateUser) (*model.User, error) {

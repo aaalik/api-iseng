@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
@@ -23,9 +22,10 @@ func StartServer(wg *sync.WaitGroup, logr *logrus.Logger, srv *http.Server) {
 func StopGracefully(wg *sync.WaitGroup, logr *logrus.Logger, srv *http.Server, dbr, dbw *sqlx.DB) {
 	defer wg.Done()
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	if srv != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
 			logr.Fatal(err)
 		}
@@ -40,5 +40,4 @@ func StopGracefully(wg *sync.WaitGroup, logr *logrus.Logger, srv *http.Server, d
 			logr.Fatal(err)
 		}
 	}
-	os.Exit(0)
 }
