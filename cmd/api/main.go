@@ -85,7 +85,7 @@ func main() {
 
 	// Graceful Stop handle
 	wg.Add(1)
-	go cmd.StopGracefully(&wg, logr, server, sqlRead, sqlWrite)
+	go cmd.StopGracefully(&wg, logr, cf.StopTimeout, server, sqlRead, sqlWrite)
 
 	wg.Wait()
 

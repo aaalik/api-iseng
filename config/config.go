@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -29,11 +30,13 @@ const (
 	configSQLDBReadName = "DB_READER_NAME"
 
 	configHostAddress = "HOST_ADDRESS"
+	configStopTimeout = "STOP_TIMEOUT"
 )
 
 type Config struct {
-	Host  Host
-	SQLDB SQLDB
+	Host        Host
+	StopTimeout int
+	SQLDB       SQLDB
 }
 
 type Host struct {
@@ -61,10 +64,16 @@ type SQLDBConfig struct {
 func NewConfig(mustLoad bool) Config {
 	gotenv.Load(".env")
 
+	stopTimeout, err := strconv.Atoi(os.Getenv(configStopTimeout))
+	if err != nil {
+		panic(err)
+	}
+
 	return Config{
 		Host: Host{
 			Address: os.Getenv(configHostAddress),
 		},
+		StopTimeout: stopTimeout,
 		SQLDB: SQLDB{
 			Driver: os.Getenv(configSQLDBDriver),
 			Write: SQLDBConfig{
@@ -102,14 +111,15 @@ func (cf Config) NewSQL() (reader, writer *sqlx.DB) {
 			cf.SQLDB.Read.Name,
 		),
 	)
-
 	if err != nil {
 		panic(err)
 	}
+
 	err = reader.Ping()
 	if err != nil {
 		panic(err)
 	}
+
 	reader.Mapper = reflectx.NewMapper("json")
 	reader.SetMaxIdleConns(0)
 
@@ -126,10 +136,12 @@ func (cf Config) NewSQL() (reader, writer *sqlx.DB) {
 	if err != nil {
 		panic(err)
 	}
+
 	err = writer.Ping()
 	if err != nil {
 		panic(err)
 	}
+
 	writer.Mapper = reflectx.NewMapper("json")
 	writer.SetMaxIdleConns(0)
 	return
