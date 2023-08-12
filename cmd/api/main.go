@@ -80,12 +80,9 @@ func main() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGINT, syscall.SIGHUP)
 
-	sig := <-stop
-	logr.Info("Caught signal ", sig)
-
 	// Graceful Stop handle
 	wg.Add(1)
-	go cmd.StopGracefully(&wg, logr, cf.StopTimeout, server, sqlRead, sqlWrite)
+	go cmd.StopGracefully(stop, &wg, logr, cf.StopTimeout, server, sqlRead, sqlWrite)
 
 	wg.Wait()
 

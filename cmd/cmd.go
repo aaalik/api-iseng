@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -19,7 +20,10 @@ func StartServer(wg *sync.WaitGroup, logr *logrus.Logger, srv *http.Server) {
 	}
 }
 
-func StopGracefully(wg *sync.WaitGroup, logr *logrus.Logger, timeout int, srv *http.Server, dbr, dbw *sqlx.DB) {
+func StopGracefully(sig chan os.Signal, wg *sync.WaitGroup, logr *logrus.Logger, timeout int, srv *http.Server, dbr, dbw *sqlx.DB) {
+	signal := <-sig
+	logr.Info("Caught signal ", signal)
+
 	defer wg.Done()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
